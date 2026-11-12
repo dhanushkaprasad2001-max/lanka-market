@@ -97,6 +97,31 @@ $("listingGrid").addEventListener("click",async e=>{
  if(fav){e.stopPropagation();await toggleFavorite(fav.dataset.favorite);return}
  const card=e.target.closest("[data-listing-id]");if(card)openListing(card.dataset.listingId);
 });
+
+async function openAccount(tab){
+ if(!currentUser){authFlow();return}
+ showModal("accountModal");
+ document.querySelectorAll("#accountTabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ const host=$("accountContent");host.innerHTML="<p>Loading...</p>";
+ if(tab==="myads"){
+  const r=await db.from("listings").select("id,title,price,status,created_at").eq("user_id",currentUser.id).order("created_at",{ascending:false});
+  if(r.error){host.textContent=r.error.message;return}
+  host.innerHTML=r.data.length?'<div class="dash-list">'+r.data.map(a=>'<div class="dash-item"><div><strong>'+escapeHtml(a.title)+'</strong><small>'+money(a.price)+' · '+new Date(a.created_at).toLocaleDateString("en-LK")+'</small></div><div><span class="pill-status">'+escapeHtml(a.status)+'</span> <button class="tinybtn" data-delete-ad="'+a.id+'">Delete</button></div></div>').join("")+'</div>':'<p>You have not posted any ads yet.</p>';
+  host.querySelectorAll("[data-delete-ad]").forEach(b=>b.addEventListener("click",async()=>{if(!confirm("Delete this ad permanently?"))return;const d=await db.from("listings").delete().eq("id",b.dataset.deleteAd).eq("user_id",currentUser.id);if(d.error)alert(d.error.message);else openAccount("myads")}));
+ }else if(tab==="favorites"){
+  const r=await db.from("favorites").select("listing_id,listings(id,title,price,status)").eq("user_id",currentUser.id);
+  if(r.error){host.textContent=r.error.message;return}
+  const rows=(r.data||[]).filter(x=>x.listings&&x.listings.status==="approved");
+  host.innerHTML=rows.length?'<div class="dash-list">'+rows.map(x=>'<div class="dash-item"><div><strong>'+escapeHtml(x.listings.title)+'</strong><small>'+money(x.listings.price)+'</small></div><button class="tinybtn" data-unfavorite="'+x.listing_id+'">Remove</button></div>').join("")+'</div>':'<p>No saved ads yet.</p>';
+  host.querySelectorAll("[data-unfavorite]").forEach(b=>b.addEventListener("click",async()=>{await toggleFavorite(b.dataset.unfavorite);openAccount("favorites")}));
+ }else if(tab==="admin"&&currentRole==="admin"){
+  const r=await db.from("listings").select("id,title,price,district:districts(name)").eq("status","pending").order("created_at",{ascending:true});
+  if(r.error){host.textContent=r.error.message;return}
+  host.innerHTML=r.data.length?'<div class="dash-list">'+r.data.map(a=>'<div class="dash-item"><div><strong>'+escapeHtml(a.title)+'</strong><small>'+money(a.price)+' · '+escapeHtml(a.district&&a.district.name||"")+'</small></div><div><button class="tinybtn" data-review="'+a.id+'" data-status="approved">Approve</button> <button class="tinybtn" data-review="'+a.id+'" data-status="rejected">Reject</button></div></div>').join("")+'</div>':'<p>No ads are waiting for review.</p>';
+  host.querySelectorAll("[data-review]").forEach(b=>b.addEventListener("click",async()=>{const u=await db.from("listings").update({status:b.dataset.status}).eq("id",b.dataset.review);if(u.error)alert(u.error.message);else openAccount("admin")}));
+ }else{host.textContent="This section is only available to administrators."}
+}
+
 function closeNamedModal(id){$(id).classList.remove("show");document.body.style.overflow=""}
 function showModal(id){$(id).classList.add("show");document.body.style.overflow="hidden"}
 async function toggleFavorite(id){
