@@ -73,9 +73,14 @@ async function refreshAuth(){
 }
 async function authFlow(){
  if(currentUser){if(confirm("Sign out of VIKMA?")){await db.auth.signOut();await refreshAuth()}return}
- const mode=prompt("Type SIGNUP to create an account or LOGIN to sign in:","SIGNUP");if(!mode)return;
+ const mode=prompt("Type SIGNUP, LOGIN, or GOOGLE:","SIGNUP");if(!mode)return;
  const email=prompt("Your email address:");if(!email)return;
  const password=prompt("Create or enter your password (at least 8 characters):");if(!password)return;
+ if(mode.toUpperCase()==="GOOGLE"){
+  const {error}=await db.auth.signInWithOAuth({provider:"google",options:{redirectTo:"https://dhanushkaprasad2001-max.github.io/lanka-market/"}});
+  if(error)alert(error.message);
+  return;
+ }
  if(mode.toUpperCase()==="SIGNUP"){
   const full_name=prompt("Your full name:")||"";
   const {error}=await db.auth.signUp({email,password,options:{data:{full_name},emailRedirectTo:"https://dhanushkaprasad2001-max.github.io/lanka-market/"} });
