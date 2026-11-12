@@ -31,6 +31,8 @@ These are public client values and can be placed in the frontend configuration. 
 
 ## Current implementation status
 
+The admin review queue is visible only to profiles whose `role` is `admin`. It can approve or reject pending ads. Seller account tools are available from the **My account** button after signing in.
+
 The SQL schema creates profiles, 10 main marketplace categories with 98 subcategories, all 25 Sri Lankan districts, listings, listing images, favorites, reports, Row Level Security policies and the public listing-images storage bucket.
 
-The frontend still needs to be wired to the project's URL and publishable key before multi-user sign-in, cloud listing creation and image uploads become live. Test with a second ordinary account before public launch.
+The frontend is already configured with the project's URL and publishable key. The current website includes sign-in/sign-up, cloud ad creation with up to five images, category and district browsing, listing detail views, favorites, a seller dashboard (edit title/price, mark approved ads sold, delete ads), and an administrator review queue. The first administrator must still be promoted manually using the SQL statement above. Run `supabase/category_migration.sql` after the main schema to add the expanded category tree. Test with a second ordinary account before public launch.
