@@ -1,10 +1,10 @@
-# LankaMarket admin setup
+# VIKMA admin setup
 
 Run the main database script first: `supabase/schema.sql`.
 
 ## Make your own account the first administrator
 
-1. Sign up for LankaMarket once after the frontend is connected to Supabase.
+1. Sign up for VIKMA once after the frontend is connected to Supabase.
 2. In Supabase, open SQL Editor and run this statement, replacing the email with the exact email used for your signup:
 
 ```sql
@@ -31,6 +31,6 @@ These are public client values and can be placed in the frontend configuration. 
 
 ## Current implementation status
 
-The SQL schema creates profiles, categories and subcategories, all 25 Sri Lankan districts, listings, listing images, favorites, reports, Row Level Security policies and the public listing-images storage bucket.
+The SQL schema creates profiles, 10 main marketplace categories with 98 subcategories, all 25 Sri Lankan districts, listings, listing images, favorites, reports, Row Level Security policies and the public listing-images storage bucket.
 
 The frontend still needs to be wired to the project's URL and publishable key before multi-user sign-in, cloud listing creation and image uploads become live. Test with a second ordinary account before public launch.
