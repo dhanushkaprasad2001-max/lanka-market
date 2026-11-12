@@ -78,7 +78,7 @@ async function authFlow(){
  const password=prompt("Create or enter your password (at least 8 characters):");if(!password)return;
  if(mode.toUpperCase()==="SIGNUP"){
   const full_name=prompt("Your full name:")||"";
-  const {error}=await db.auth.signUp({email,password,options:{data:{full_name}}});
+  const {error}=await db.auth.signUp({email,password,options:{data:{full_name},emailRedirectTo:"https://dhanushkaprasad2001-max.github.io/lanka-market/"} });
   if(error)alert(error.message);else alert("Registration submitted. Check your email for a confirmation link, then sign in.");
  }else{
   const {error}=await db.auth.signInWithPassword({email,password});
