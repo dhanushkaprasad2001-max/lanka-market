@@ -1,11 +1,11 @@
 # VIKMA admin setup
 
-Run the main database script first: `supabase/schema.sql`.
+## First administrator
 
-## Make your own account the first administrator
+The database is already connected to the VIKMA website and the expanded category migration has been applied.
 
-1. Sign up for VIKMA once after the frontend is connected to Supabase.
-2. In Supabase, open SQL Editor and run this statement, replacing the email with the exact email used for your signup:
+1. Create your own account through the VIKMA website using the email address you want to use as the owner/admin.
+2. After signup, run the following in the Supabase SQL Editor, replacing the email with the exact signup email:
 
 ```sql
 update public.profiles
@@ -16,23 +16,28 @@ where id = (
 );
 ```
 
-3. Confirm that exactly one row was updated. If zero rows were updated, first create the account in the website and verify the email if email confirmation is enabled.
-4. Sign out and sign in again so the website refreshes the account role.
+3. Confirm that one row was updated. Sign out and sign back in to refresh the admin role.
 
 Do not make ordinary users administrators. Never put the Supabase service-role key in website JavaScript or GitHub.
 
 ## Supabase browser configuration
 
-The browser app needs:
-- Project URL (shown on the Supabase project page)
-- Publishable key / legacy anon public key (Project Settings > API Keys)
+The browser app uses the project's URL and publishable key. Publishable keys are intended for browser use. Never use a secret key or service_role key in frontend code.
 
-These are public client values and can be placed in the frontend configuration. Never use the secret key or service_role key in a browser app.
+## Current database
 
-## Current implementation status
+- 10 main marketplace categories
+- 117 second-level categories
+- 83 third-level categories (210 active categories total)
+- All 25 Sri Lankan districts
+- Profiles, listings, listing images, favorites and listing reports
+- Row Level Security enabled on all marketplace tables
+- Public listing-images storage bucket
+- Additional indexes for category, district, image, favorite and report lookups
+- Internal trigger-function execution grants tightened
 
-The admin review queue is visible only to profiles whose `role` is `admin`. It can approve or reject pending ads and review, resolve or dismiss user reports. Seller account tools are available from the **My account** button after signing in.
+## Current website features
 
-The SQL schema creates profiles, 10 main marketplace categories with 98 subcategories, all 25 Sri Lankan districts, listings, listing images, favorites, reports, Row Level Security policies and the public listing-images storage bucket.
+The frontend includes sign-in/sign-up, ad creation with up to five images, category and district browsing, listing detail views, favorites, seller tools (edit title/price, mark approved ads sold, delete ads), an administrator ad-review queue, and a report-review queue.
 
-The frontend is already configured with the project's URL and publishable key. The current website includes sign-in/sign-up, cloud ad creation with up to five images, category and district browsing, listing detail views, favorites, a seller dashboard (edit title/price, mark approved ads sold, delete ads), an administrator ad-review queue, and a report-review queue. The first administrator must still be promoted manually using the SQL statement above. Run `supabase/category_migration.sql` after the main schema to add the expanded category tree. Test with a second ordinary account before public launch.
+The first administrator still needs to be promoted after creating an account. Test with a second ordinary account before public launch. This project is still under development and needs end-to-end testing before it should be treated as a production-ready marketplace.
