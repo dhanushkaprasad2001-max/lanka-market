@@ -47,7 +47,7 @@ function render(){
  let q=$("searchInput").value.trim().toLowerCase(), cat=activeCategory||$("categoryFilter").value, district=$("districtFilter").value||$("districtSearch").value;
  let selected=categories.find(c=>String(c.id)===String(cat));let included=selected?[String(selected.id),...categoryDescendantIds(selected.id)]:[];let rows=allListings.filter(a=>(!cat||included.includes(String(a.category_id)))&&(!district||String(a.district_id)===String(district))&&(!q||[a.title,a.description,a.category?.name,a.district?.name].join(" ").toLowerCase().includes(q)));
  const sort=$("sortFilter").value;if(sort==="low")rows.sort((a,b)=>a.price-b.price);else if(sort==="high")rows.sort((a,b)=>b.price-a.price);else rows.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- $("listingGrid").innerHTML=rows.length?rows.map(a=>{const first=a.listing_images?.[0]?.url;return '<article class="listing"><div class="photo">'+(first?'<img src="'+escapeHtml(first)+'" alt="'+escapeHtml(a.title)+'">':escapeHtml(a.category?.icon||"🛍️"))+'<span class="tag">'+escapeHtml(a.category?.name||"")+'</span></div><div class="listing-body"><h3>'+escapeHtml(a.title)+'</h3><div class="price">'+money(a.price)+'</div><div class="meta"><span>📍 '+escapeHtml(a.district?.name||"Sri Lanka")+'</span><span>•</span><span>'+new Date(a.created_at).toLocaleDateString("en-LK")+'</span></div></div></article>'}).join(""):'<div class="empty">No approved listings found. Try another search or check back soon.</div>';
+ $("listingGrid").innerHTML=rows.length?rows.map(a=>{const first=a.listing_images?.[0]?.url;return '<article class="listing" data-listing-id="'+a.id+'"><div class="photo">'+(first?'<img src="'+escapeHtml(first)+'" alt="'+escapeHtml(a.title)+'">':escapeHtml(a.category?.icon||"🛍️"))+'<span class="tag">'+escapeHtml(a.category?.name||"")+'</span></div><div class="listing-body"><h3>'+escapeHtml(a.title)+'</h3><div class="price">'+money(a.price)+'</div><div class="meta"><span>📍 '+escapeHtml(a.district?.name||"Sri Lanka")+'</span><span>•</span><span>'+new Date(a.created_at).toLocaleDateString("en-LK")+'</span></div><button class="tinybtn" data-favorite="'+a.id+'">'+(favoriteIds.has(a.id)?"♥ Saved":"♡ Save")+'</button></div></article>'}).join(""):'<div class="empty">No approved listings found. Try another search or check back soon.</div>';
  document.querySelectorAll(".cat").forEach(b=>b.classList.toggle("active",b.dataset.cat===String(activeCategory)));
 }
 async function loadData(){
@@ -62,8 +62,13 @@ async function loadData(){
  buildCategories();fillSelect("districtFilter",districts,"All districts");fillSelect("districtSearch",districts,"All districts");fillSelect("adDistrict",districts,"Choose district");render();
 }
 async function refreshAuth(){
- const {data}=await db.auth.getSession();currentUser=data.session?.user||null;
+ const {data}=await db.auth.getSession();currentUser=data.session?.user||null;currentRole="user";
+ if(currentUser){const p=await db.from("profiles").select("role").eq("id",currentUser.id).maybeSingle();currentRole=p.data?.role||"user"}
  $("authButton").textContent=currentUser?"Sign out":"Login / Register";
+ $("accountButton").style.display=currentUser?"inline-block":"none";
+ $("adminTab").style.display=currentRole==="admin"?"inline-block":"none";
+ const f=currentUser?await db.from("favorites").select("listing_id").eq("user_id",currentUser.id):{data:[]};
+ favoriteIds=new Set((f.data||[]).map(x=>x.listing_id));render();
 }
 async function authFlow(){
  if(currentUser){if(confirm("Sign out of VIKMA?")){await db.auth.signOut();await refreshAuth()}return}
