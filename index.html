@@ -142,7 +142,9 @@ function openListing(id){
  const pic=a.listing_images&&a.listing_images[0]?a.listing_images[0].url:"";
  $("detailTitle").textContent=a.title;
  let picture=pic?'<img src="'+escapeHtml(pic)+'" alt="'+escapeHtml(a.title)+'" style="width:100%;max-height:320px;object-fit:contain;background:#eef4ef;border-radius:12px">':'<div style="padding:45px;text-align:center;font-size:60px;background:#eef4ef;border-radius:12px">'+escapeHtml(a.category&&a.category.icon||"🛍️")+'</div>';
- $("detailContent").innerHTML=picture+'<div class="detail-price">'+money(a.price)+'</div><p>Category: '+escapeHtml(a.category&&a.category.name||"")+' · Location: '+escapeHtml(a.district&&a.district.name||"Sri Lanka")+' · Condition: '+escapeHtml(a.item_condition||"Not specified")+'</p><div class="detail-contact"><a href="tel:'+encodeURIComponent(a.contact_phone||"")+'">Call seller</a></div><button class="tinybtn" id="detailFavorite">Save to favorites</button><h3>Description</h3><div class="detail-description">'+escapeHtml(a.description)+'</div>';
+ const gallery=(a.listing_images||[]).slice(1).map(i=>'<img src="'+escapeHtml(i.url)+'" alt="'+escapeHtml(a.title)+'" style="width:100px;height:85px;object-fit:cover;border-radius:8px;margin:8px 6px 0 0">').join("");
+ const wa=a.whatsapp_phone?'<a target="_blank" rel="noopener" href="https://wa.me/'+encodeURIComponent(a.whatsapp_phone.replace(/[^0-9]/g,""))+'">WhatsApp seller</a>':"";
+ $("detailContent").innerHTML=picture+'<div>'+gallery+'</div><div class="detail-price">'+money(a.price)+'</div><p>Category: '+escapeHtml(a.category&&a.category.name||"")+' · Location: '+escapeHtml(a.district&&a.district.name||"Sri Lanka")+' · Condition: '+escapeHtml(a.item_condition||"Not specified")+'</p><div class="detail-contact"><a href="tel:'+encodeURIComponent(a.contact_phone||"")+'">Call seller</a>'+wa+'</div><button class="tinybtn" id="detailFavorite">Save to favorites</button><h3>Description</h3><div class="detail-description">'+escapeHtml(a.description)+'</div>';
  $("detailFavorite").addEventListener("click",async()=>toggleFavorite(id));
  showModal("detailModal");
 }
