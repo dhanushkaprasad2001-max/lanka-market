@@ -82,7 +82,11 @@ async function authFlow(){
   if(error)alert(error.message);else alert("Registration submitted. Check your email for a confirmation link, then sign in.");
  }else{
   const {error}=await db.auth.signInWithPassword({email,password});
-  if(error)alert(error.message);else{alert("You are signed in.");}
+  if(error?.code==="email_not_confirmed"||error?.message?.toLowerCase().includes("email not confirmed")){
+   const {error:resendError}=await db.auth.resend({type:"signup",email,options:{emailRedirectTo:"https://dhanushkaprasad2001-max.github.io/lanka-market/"}});
+   if(resendError)alert("Email not verified. Could not resend confirmation: "+resendError.message);
+   else alert("Your email is not verified yet. A new confirmation email has been sent. Open the newest email and tap Confirm.");
+  }else if(error)alert(error.message);else{alert("You are signed in.");}
  }
  await refreshAuth();
 }
