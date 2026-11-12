@@ -146,6 +146,9 @@ function openListing(id){
  const wa=a.whatsapp_phone?'<a target="_blank" rel="noopener" href="https://wa.me/'+encodeURIComponent(a.whatsapp_phone.replace(/[^0-9]/g,""))+'">WhatsApp seller</a>':"";
  $("detailContent").innerHTML=picture+'<div>'+gallery+'</div><div class="detail-price">'+money(a.price)+'</div><p>Category: '+escapeHtml(a.category&&a.category.name||"")+' · Location: '+escapeHtml(a.district&&a.district.name||"Sri Lanka")+' · Condition: '+escapeHtml(a.item_condition||"Not specified")+'</p><div class="detail-contact"><a href="tel:'+encodeURIComponent(a.contact_phone||"")+'">Call seller</a>'+wa+'</div><button class="tinybtn" id="detailFavorite">Save to favorites</button><h3>Description</h3><div class="detail-description">'+escapeHtml(a.description)+'</div>';
  $("detailFavorite").addEventListener("click",async()=>toggleFavorite(id));
+ const report=document.createElement("button");report.className="tinybtn";report.textContent="Report this ad";report.style.marginLeft="8px";
+ report.addEventListener("click",async()=>{if(!currentUser){alert("Please sign in to report an ad.");authFlow();return}const reason=prompt("Why are you reporting this ad?");if(!reason||reason.trim().length<5){alert("Please enter at least 5 characters.");return}const result=await db.from("listing_reports").insert({listing_id:id,reporter_id:currentUser.id,reason:reason.trim()});if(result.error)alert(result.error.message);else alert("Thank you. Your report has been sent for review.")});
+ $("detailContent").appendChild(report);
  showModal("detailModal");
 }
 
