@@ -282,9 +282,14 @@ on conflict (slug) do nothing;
 insert into public.categories (name, slug, icon, parent_id, sort_order)
 select v.name, v.slug, v.icon, p.id, v.sort_order
 from (values
-('Cars','cars','🚘','vehicles',1),('Motorcycles','motorcycles','🏍️','vehicles',2),
-('Vans','vans','🚐','vehicles',3),('Three-wheelers','three-wheelers','🛺','vehicles',4),
-('Trucks','trucks','🚚','vehicles',5),('Vehicle parts','vehicle-parts','⚙️','vehicles',6),
+('Cars','cars','🚘','vehicles',1),('Vans','vans','🚐','vehicles',2),
+('Buses','buses','🚌','vehicles',3),('Lorries & Trucks','lorries-trucks','🚛','vehicles',4),
+('Motorcycles','motorcycles','🏍️','vehicles',5),('Scooters','scooters','🛵','vehicles',6),
+('Three-wheelers','three-wheelers','🛺','vehicles',7),('Bicycles','bicycles','🚲','vehicles',8),
+('Electric Vehicles','electric-vehicles','⚡','vehicles',9),('Jeeps & SUVs','jeeps-suvs','🚙','vehicles',10),
+('Tractors','tractors','🚜','vehicles',11),('Heavy Machinery','heavy-machinery','🏗️','vehicles',12),
+('Boats & Watercraft','boats-watercraft','🛥️','vehicles',13),('Other Vehicles','other-vehicles','🚘','vehicles',14),
+('Vehicle parts','vehicle-parts','⚙️','vehicles',15),
 ('Houses for sale','houses-sale','🏡','property',1),('Houses for rent','houses-rent','🏠','property',2),
 ('Land','land','🌳','property',3),('Apartments','apartments','🏢','property',4),
 ('Mobile phones','mobile-phones','📱','electronics',1),('Computers','computers','💻','electronics',2),
