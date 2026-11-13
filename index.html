@@ -197,7 +197,11 @@ $("adForm").addEventListener("submit",async e=>{
  $("adForm").reset();closeModal();alert("Your ad was submitted for admin review. It will appear publicly after approval.");await loadData();
 });
 $("year").textContent=new Date().getFullYear();
-db.auth.onAuthStateChange(()=>{refreshAuth()});
+db.auth.onAuthStateChange((event,session)=>{
+ if(event==="SIGNED_IN"&&session?.user){currentUser=session.user;}
+ // Run follow-up Supabase queries after the auth callback returns to avoid lock contention.
+ setTimeout(()=>{refreshAuth().catch(err=>console.error("Auth refresh failed:",err));},0);
+});
 await refreshAuth();await loadData();
 </script>
 </body></html>
