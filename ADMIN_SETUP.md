@@ -41,7 +41,7 @@ Supabase phone OTP requires an SMS provider and may incur charges. See [Supabase
 
 ## Payments and featured ads
 
-Featured-ad payment processing is not activated. To enable it safely, the owner must first open a merchant account with a Sri Lankan payment provider such as PayHere and obtain the merchant credentials. The secret credentials must be stored as Supabase Edge Function secrets, never in the public website. After merchant onboarding, implement and test server-side payment creation and signature-verified webhooks before accepting payments.
+Featured-ad payment processing is not activated. To enable it safely, the owner must first open a merchant account with a Sri Lankan payment provider such as PayHere and obtain the merchant credentials. The secret credentials must be stored as Supabase Edge Function secrets, never in the public website. Important: PayHere's published supported-business rules currently list multi-vendor platforms as unsupported. VIKMA is a multi-vendor classifieds marketplace, so do not build or activate PayHere checkout unless PayHere gives written confirmation that this exact VIKMA advertising-service model is eligible. See [PayHere's application requirements](https://support.payhere.lk/application-process) and [supported service plans](https://payhere.lk/fees/). After a suitable provider approves VIKMA, implement server-side payment creation and signature-verified webhooks before accepting online payments.
 
 ## Before public launch
 
@@ -65,3 +65,8 @@ The account menu has a **Promote** tab for sellers and businesses. Initial propo
 These are launch-test prices, not payment confirmations. The website does not collect money automatically. Admin must contact the requester, provide verified payment instructions, check the payment independently, and only then approve the request in **Paid requests**. Approving a featured listing activates its featured placement for the purchased duration. Business and banner requests are enquiries only; arrange creative, placement and dates with the business manually.
 
 Never ask a buyer for an OTP, password, PIN or full card details. Do not publish bank details until the business owner confirms the correct receiving account.
+
+
+## AdSense and user listings
+
+VIKMA contains user-generated listings. Google states that the publisher is responsible for policy compliance of all user-generated content on pages where ad code appears. Keep listing moderation active, provide a way to report listings, review reported content promptly, and do not place AdSense code on unmoderated or private-message pages. Apply for VIKMA as a separate site in the AdSense account; approval for another website does not automatically approve this domain. See [Google's user-generated content guidance](https://support.google.com/adsense/answer/1355699) and [AdSense program policies](https://support.google.com/adsense/answer/48182).
