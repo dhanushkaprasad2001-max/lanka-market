@@ -83,18 +83,24 @@ create index if not exists listings_user_idx on public.listings (user_id, create
 create index if not exists listing_images_listing_idx on public.listing_images (listing_id, sort_order);
 create index if not exists favorites_user_idx on public.favorites (user_id);
 
-create or replace function public.is_lankamarket_admin()
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to anon, authenticated;
+
+create or replace function private.is_lankamarket_admin()
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.profiles
-    where id = auth.uid() and role = 'admin'
+    where id = (select auth.uid()) and role = 'admin'
   );
 $$;
+revoke all on function private.is_lankamarket_admin() from public;
+grant execute on function private.is_lankamarket_admin() to anon, authenticated;
 
 create or replace function public.create_lankamarket_profile()
 returns trigger
@@ -122,7 +128,7 @@ set search_path = public
 as $$
 begin
   if auth.uid() is not null and new.role is distinct from old.role
-     and not public.is_lankamarket_admin() then
+     and not private.is_lankamarket_admin() then
     raise exception 'You cannot change your account role';
   end if;
   return new;
@@ -141,10 +147,10 @@ set search_path = public
 as $$
 begin
   if tg_op = 'INSERT' then
-    if not public.is_lankamarket_admin() then
+    if not private.is_lankamarket_admin() then
       new.status := 'pending';
     end if;
-  elsif auth.uid() is not null and not public.is_lankamarket_admin() then
+  elsif auth.uid() is not null and not private.is_lankamarket_admin() then
     if new.user_id is distinct from old.user_id then
       raise exception 'Listing owner cannot be changed';
     end if;
@@ -173,43 +179,43 @@ alter table public.listing_reports enable row level security;
 
 drop policy if exists "Profiles readable by owner or admin" on public.profiles;
 create policy "Profiles readable by owner or admin" on public.profiles
-for select to authenticated using (id = auth.uid() or public.is_lankamarket_admin());
+for select to authenticated using (id = auth.uid() or private.is_lankamarket_admin());
 drop policy if exists "Users update own profile" on public.profiles;
 create policy "Users update own profile" on public.profiles
-for update to authenticated using (id = auth.uid() or public.is_lankamarket_admin())
-with check (id = auth.uid() or public.is_lankamarket_admin());
+for update to authenticated using (id = auth.uid() or private.is_lankamarket_admin())
+with check (id = auth.uid() or private.is_lankamarket_admin());
 
 drop policy if exists "Active categories are public" on public.categories;
 create policy "Active categories are public" on public.categories
-for select to anon, authenticated using (is_active or public.is_lankamarket_admin());
+for select to anon, authenticated using (is_active or private.is_lankamarket_admin());
 drop policy if exists "Admins manage categories" on public.categories;
 create policy "Admins manage categories" on public.categories
-for all to authenticated using (public.is_lankamarket_admin())
-with check (public.is_lankamarket_admin());
+for all to authenticated using (private.is_lankamarket_admin())
+with check (private.is_lankamarket_admin());
 
 drop policy if exists "Districts are public" on public.districts;
 create policy "Districts are public" on public.districts
 for select to anon, authenticated using (true);
 drop policy if exists "Admins manage districts" on public.districts;
 create policy "Admins manage districts" on public.districts
-for all to authenticated using (public.is_lankamarket_admin())
-with check (public.is_lankamarket_admin());
+for all to authenticated using (private.is_lankamarket_admin())
+with check (private.is_lankamarket_admin());
 
 drop policy if exists "Approved listings are public and owners see own" on public.listings;
 create policy "Approved listings are public and owners see own" on public.listings
 for select to anon, authenticated
-using (status = 'approved' or user_id = auth.uid() or public.is_lankamarket_admin());
+using (status = 'approved' or user_id = auth.uid() or private.is_lankamarket_admin());
 drop policy if exists "Signed-in users create own listings" on public.listings;
 create policy "Signed-in users create own listings" on public.listings
-for insert to authenticated with check (user_id = auth.uid() or public.is_lankamarket_admin());
+for insert to authenticated with check (user_id = auth.uid() or private.is_lankamarket_admin());
 drop policy if exists "Owners and admins update listings" on public.listings;
 create policy "Owners and admins update listings" on public.listings
 for update to authenticated
-using (user_id = auth.uid() or public.is_lankamarket_admin())
-with check (user_id = auth.uid() or public.is_lankamarket_admin());
+using (user_id = auth.uid() or private.is_lankamarket_admin())
+with check (user_id = auth.uid() or private.is_lankamarket_admin());
 drop policy if exists "Owners and admins delete listings" on public.listings;
 create policy "Owners and admins delete listings" on public.listings
-for delete to authenticated using (user_id = auth.uid() or public.is_lankamarket_admin());
+for delete to authenticated using (user_id = auth.uid() or private.is_lankamarket_admin());
 
 drop policy if exists "Listing images visible with public listings or owner" on public.listing_images;
 create policy "Listing images visible with public listings or owner" on public.listing_images
@@ -217,7 +223,7 @@ for select to anon, authenticated
 using (
   exists (select 1 from public.listings l
           where l.id = listing_id
-          and (l.status = 'approved' or l.user_id = auth.uid() or public.is_lankamarket_admin()))
+          and (l.status = 'approved' or l.user_id = auth.uid() or private.is_lankamarket_admin()))
 );
 drop policy if exists "Owners add listing images" on public.listing_images;
 create policy "Owners add listing images" on public.listing_images
@@ -227,7 +233,7 @@ with check (user_id = auth.uid() and exists (
 ));
 drop policy if exists "Owners remove listing images" on public.listing_images;
 create policy "Owners remove listing images" on public.listing_images
-for delete to authenticated using (user_id = auth.uid() or public.is_lankamarket_admin());
+for delete to authenticated using (user_id = auth.uid() or private.is_lankamarket_admin());
 
 drop policy if exists "Users manage own favorites" on public.favorites;
 create policy "Users manage own favorites" on public.favorites
@@ -238,8 +244,8 @@ create policy "Users submit reports" on public.listing_reports
 for insert to authenticated with check (reporter_id = auth.uid());
 drop policy if exists "Admins review reports" on public.listing_reports;
 create policy "Admins review reports" on public.listing_reports
-for all to authenticated using (public.is_lankamarket_admin())
-with check (public.is_lankamarket_admin());
+for all to authenticated using (private.is_lankamarket_admin())
+with check (private.is_lankamarket_admin());
 
 -- Public image bucket. Upload paths must start with the authenticated user's UUID.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
