@@ -52,3 +52,16 @@ Featured-ad payment processing is not activated. To enable it safely, the owner 
 - Configure a payment provider before enabling any paid listing promotion.
 - Enable leaked-password protection in Supabase Auth security settings.
 - Set up backups, abuse reporting, rate limits and a privacy policy/contact process.
+
+
+## Monetization requests
+
+The account menu has a **Promote** tab for sellers and businesses. Initial proposed prices are:
+- Featured listing: LKR 500 / 7 days
+- Featured listing: LKR 1,500 / 30 days
+- Business promotion enquiry: LKR 2,500 / 30 days
+- Homepage banner enquiry: LKR 3,000 / 7 days
+
+These are launch-test prices, not payment confirmations. The website does not collect money automatically. Admin must contact the requester, provide verified payment instructions, check the payment independently, and only then approve the request in **Paid requests**. Approving a featured listing activates its featured placement for the purchased duration. Business and banner requests are enquiries only; arrange creative, placement and dates with the business manually.
+
+Never ask a buyer for an OTP, password, PIN or full card details. Do not publish bank details until the business owner confirms the correct receiving account.
