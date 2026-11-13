@@ -27,3 +27,10 @@ https://github.com/dhanushkaprasad2001-max/lanka-market
 
 ## Enable GitHub Pages
 Repository Settings → Pages → Deploy from a branch → `main` → `/(root)` → Save.
+
+
+## Monetization
+
+- `supabase/monetization.sql` documents the monetization request schema. It is already applied to the connected Supabase project.
+- Initial request prices: Featured listing 7 days LKR 500; 30 days LKR 1,500; business promotion 30 days LKR 2,500; homepage banner request 7 days LKR 3,000. These are proposed launch prices and can be changed before accepting customers.
+- Users can submit requests from Account → Promote. Admins review them from Account → Paid requests. Verify payment manually outside VIKMA before approving. No payment gateway is connected and no money is collected automatically yet.
