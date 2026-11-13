@@ -7,7 +7,7 @@ https://github.com/dhanushkaprasad2001-max/lanka-market
 
 ## Current files
 - `index.html` — responsive marketplace frontend prototype.
-- `supabase/schema.sql` — database schema, security policies, image bucket and seed categories/districts.
+- `supabase/schema.sql` — database schema, security policies, image bucket and seed categories/districts.\n- `supabase/category_migration.sql` — expanded marketplace categories.\n- `supabase/vikma_buyer_seller_messaging.sql` — buyer/seller chat tables and access policies.
 - `ADMIN_SETUP.md` — first-admin setup and secure configuration notes.
 
 ## Database setup
@@ -22,7 +22,7 @@ https://github.com/dhanushkaprasad2001-max/lanka-market
 - Use only the Supabase Project URL and Publishable key (or legacy anon public key) in the browser.
 - Row Level Security is enabled on the application tables.
 - New user listings are forced to pending approval; only administrators can approve or reject them.
-- This repository is not yet a finished, production-ready multi-user marketplace. The frontend must still be connected to your Supabase project and tested before accepting public listings.
+- The current frontend includes category/district search, price range filters, load-more browsing, Google/email authentication, ad posting, favorites, seller tools, moderation, reports and buyer/seller messaging.\n- Before public launch, complete end-to-end testing with separate buyer and seller accounts, verify email/password settings, configure backups and abuse controls, and test uploads on mobile.
 
 ## Enable GitHub Pages
 Repository Settings → Pages → Deploy from a branch → `main` → `/(root)` → Save.
