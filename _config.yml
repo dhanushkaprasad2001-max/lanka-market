@@ -1,0 +1,8 @@
+exclude:
+  - ADMIN_SETUP.md
+  - supabase/
+  - README.md
+  - .github/
+  - .git/
+  - node_modules/
+  - vendor/
