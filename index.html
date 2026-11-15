@@ -306,5 +306,6 @@ db.auth.onAuthStateChange((event,session)=>{
  setTimeout(()=>{refreshAuth().catch(err=>console.error("Auth refresh failed:",err));},0);
 });
 await refreshAuth();await loadData();
+const initialSearch=new URLSearchParams(window.location.search).get("q");if(initialSearch){$("searchInput").value=initialSearch;render();}
 </script>
 </body></html>
