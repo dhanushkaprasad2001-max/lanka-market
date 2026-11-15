@@ -39,9 +39,10 @@ The profile page now contains a phone-verification flow. It will not send SMS un
 
 Supabase phone OTP requires an SMS provider and may incur charges. See [Supabase Phone Sign-In](https://supabase.com/docs/guides/auth/phone-login).
 
-## Payments and featured ads
+## Free listings and advertising
 
-Featured-ad payment processing is not activated. To enable it safely, the owner must first open a merchant account with a Sri Lankan payment provider such as PayHere and obtain the merchant credentials. The secret credentials must be stored as Supabase Edge Function secrets, never in the public website. Important: PayHere's and OnePay's published supported-business rules currently list multi-vendor platforms as unsupported. VIKMA is a multi-vendor classifieds marketplace, so do not build or activate either checkout unless the provider gives written confirmation that this exact VIKMA advertising-service model is eligible. See [PayHere's application requirements](https://support.payhere.lk/application-process), [PayHere fees](https://payhere.lk/fees/), and [OnePay onboarding restrictions](https://docs.onepay.lk/guide/getting-started). DirectPay advertises online payment links and APIs, but its public pages do not confirm whether VIKMA's multi-vendor model is eligible; obtain written approval before integration. See [DirectPay FAQ](https://www.directpay.lk/faq). After a suitable provider approves VIKMA, implement server-side payment creation and signature-verified webhooks before accepting online payments.
+Every member may post eligible advertisements for free. VIKMA does not sell featured placements, paid boosts, business promotions or homepage banners. Do not activate payment or monetization-request workflows. The only planned revenue source is Google AdSense, subject to Google's approval and policies.
+
 
 ## Before public launch
 
@@ -49,22 +50,9 @@ Featured-ad payment processing is not activated. To enable it safely, the owner 
 - Test one buyer and one seller account separately; verify that chat messages remain private to the conversation participants.
 - Test listing creation, image upload, admin approval, edits, sold status and deletion.
 - Configure phone SMS provider and test OTP delivery if phone verification is required.
-- Configure a payment provider before enabling any paid listing promotion.
 - Enable leaked-password protection in Supabase Auth security settings.
 - Set up backups, abuse reporting, rate limits and a privacy policy/contact process.
 
-
-## Monetization requests
-
-The account menu has a **Promote** tab for sellers and businesses. Initial proposed prices are:
-- Featured listing: LKR 500 / 7 days
-- Featured listing: LKR 1,500 / 30 days
-- Business promotion enquiry: LKR 2,500 / 30 days
-- Homepage banner enquiry: LKR 3,000 / 7 days
-
-These are launch-test prices, not payment confirmations. The website does not collect money automatically. Admin must contact the requester, provide verified payment instructions, check the payment independently, and only then approve the request in **Paid requests**. Approving a featured listing activates its featured placement for the purchased duration. Business and banner requests are enquiries only; arrange creative, placement and dates with the business manually.
-
-Never ask a buyer for an OTP, password, PIN or full card details. Do not publish bank details until the business owner confirms the correct receiving account.
 
 
 ## AdSense and user listings
