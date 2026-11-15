@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://dhanushkaprasad2001-max.github.io/lanka-market/sitemap.xml
+Sitemap: https://dhanushkaprasad2001-max.github.io/lanka-market/sitemap.txt
