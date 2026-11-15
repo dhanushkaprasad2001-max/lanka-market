@@ -4,8 +4,20 @@ permalink: /sitemap.xml
 ---
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://dhanushkaprasad2001-max.github.io/lanka-market/</loc>
-    <lastmod>2026-11-15</lastmod>
-  </url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/services.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/education.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/other.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/about.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/how-it-works.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/safety.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/privacy.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/terms.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/vehicles.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/property.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/electronics.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/jobs.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/animals.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/home-garden.html</loc><lastmod>2026-11-15</lastmod></url>
+  <url><loc>https://dhanushkaprasad2001-max.github.io/lanka-market/categories/fashion.html</loc><lastmod>2026-11-15</lastmod></url>
 </urlset>
