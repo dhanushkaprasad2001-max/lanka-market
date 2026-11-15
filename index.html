@@ -63,7 +63,7 @@ function render(){
 async function loadData(reset=true){
  if(reset){listingOffset=0;allListings=[];}
  const [c,d,l]=await Promise.all([
- db.from("categories").select("id,name,slug,icon,parent_id").eq("is_active",true).order("sort_order"),
+ db.from("categories").select("id,name,slug,icon,parent_id,sort_order").eq("is_active",true).order("sort_order"),
  db.from("districts").select("id,name,province").order("name"),
  db.from("listings").select("*,category:categories(name,icon),district:districts(name),listing_images(image_path,sort_order)") .eq("status","approved").order("created_at",{ascending:false}).range(listingOffset,listingOffset+49)
  ]);
