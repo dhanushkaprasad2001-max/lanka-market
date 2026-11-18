@@ -6,6 +6,10 @@
   Content-Type: application/xml; charset=utf-8
   Cache-Control: no-store, no-cache, must-revalidate
 
+/vikma-google-sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /sitemap.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: no-store, no-cache, must-revalidate
