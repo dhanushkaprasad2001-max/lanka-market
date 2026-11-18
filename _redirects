@@ -15,3 +15,5 @@
 /categories/property.html /categories/property 301
 /categories/services.html /categories/services 301
 /categories/vehicles.html /categories/vehicles 301
+/robots.txt /public/robots.txt 200
+/sitemap.xml /public/sitemap.xml 200
