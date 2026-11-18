@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vikma-market.pages.dev/sitemap-new.xml
+Sitemap: https://vikma-market.pages.dev/vikma-sitemap.xml
