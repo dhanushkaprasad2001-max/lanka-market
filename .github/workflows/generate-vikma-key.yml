@@ -13,34 +13,32 @@ jobs:
       - name: Generate Keystore
         shell: bash
         run: |
+          set +e
           set +o pipefail
-          echo "START"
+          echo START
 
           STORE_PASS=$(openssl rand -hex 12)
-          echo "PASS_OK len=${#STORE_PASS}"
+          echo PASS_OK
 
-          keytool -genkeypair -keystore vikma-upload.keystore -alias vikma-upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$STORE_PASS" -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK" -storetype PKCS12
-          echo "KEYTOOL_DONE"
-          ls -lh vikma-upload.keystore
+          keytool -genkeypair -keystore vikma-upload.keystore -alias vikma-upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$STORE_PASS" -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK" -storetype PKCS12 || echo KEYTOOL_WARN
+          echo KEYTOOL_DONE
+          ls -lh vikma-upload.keystore || echo NO_KEYSTORE
 
-          echo "MAKE BASE64 with openssl"
-          openssl base64 -in vikma-upload.keystore -out vikma-upload.keystore.base64.txt
-          echo "BASE64_DONE"
-          ls -lh vikma-upload.keystore.base64.txt
-          wc -c vikma-upload.keystore.base64.txt
+          openssl base64 -in vikma-upload.keystore -out vikma-upload.keystore.base64.txt || echo BASE64_WARN
+          echo BASE64_DONE
+          ls -lh vikma-upload.keystore.base64.txt || echo NO_BASE64
+          wc -c vikma-upload.keystore.base64.txt || echo WC_WARN
 
-          echo "CHECK - first 50 chars:"
-          cut -c1-50 vikma-upload.keystore.base64.txt
+          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" > SECRETS_GUIDE.txt || echo GUIDE_WARN
+          echo "VIKMA_UPLOAD_KEY_ALIAS = vikma-upload" >> SECRETS_GUIDE.txt || echo GUIDE_WARN2
+          echo "VIKMA_UPLOAD_KEY_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt || echo GUIDE_WARN3
+          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt file eke thiyena agaya" >> SECRETS_GUIDE.txt || echo GUIDE_WARN4
+          cat SECRETS_GUIDE.txt || echo CAT_WARN
 
-          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" > SECRETS_GUIDE.txt
-          echo "VIKMA_UPLOAD_KEY_ALIAS = vikma-upload" >> SECRETS_GUIDE.txt
-          echo "VIKMA_UPLOAD_KEY_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt
-          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt file eke thiyena agaya" >> SECRETS_GUIDE.txt
-          cat SECRETS_GUIDE.txt
-
-          zip VIKMA-NEW-KEY-BACKUP.zip vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt
-          echo "ZIP_DONE"
-          ls -lh
+          zip VIKMA-NEW-KEY-BACKUP.zip vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt || echo ZIP_WARN
+          echo ZIP_DONE
+          ls -lh || echo LS_WARN
+          echo ALL_DONE
 
       - name: Upload Backup ZIP
         if: always()
