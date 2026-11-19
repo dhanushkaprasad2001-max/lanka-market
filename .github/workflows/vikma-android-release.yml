@@ -1,3 +1,4 @@
+# Trigger secure release build
 name: Build VIKMA Android Play Store Release
 on:
   workflow_dispatch:
