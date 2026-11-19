@@ -7,29 +7,42 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate New Keystore
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Keystore
+        shell: bash
         run: |
-          STORE_PASS=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9!@#%_-')
-          echo "STORE_PASS=$STORE_PASS" >> $GITHUB_ENV
-          keytool -genkeypair \
-            -v \
-            -keystore vikma-upload.keystore \
-            -alias vikma-upload \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass "$STORE_PASS" \
-            -keypass "$STORE_PASS" \
-            -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK"
-          keytool -list -v -keystore vikma-upload.keystore -storepass "$STORE_PASS"
+          set +e
+          set +o pipefail
+          echo "START"
+
+          STORE_PASS=$(openssl rand -hex 12)
+          echo "PASS_OK"
+
+          keytool -genkeypair -keystore vikma-upload.keystore -alias vikma-upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$STORE_PASS" -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK" -storetype PKCS12
+          echo "KEYTOOL_DONE"
+
+          keytool -list -keystore vikma-upload.keystore -storepass "$STORE_PASS"
+          echo "LIST_DONE"
+
           base64 -w 0 vikma-upload.keystore > vikma-upload.keystore.base64.txt
-          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt ඇතුලේ තියෙන අගය" > SECRETS_GUIDE.txt
-          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt
+          echo "BASE64_DONE"
+
+          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" > SECRETS_GUIDE.txt
           echo "VIKMA_UPLOAD_KEY_ALIAS = vikma-upload" >> SECRETS_GUIDE.txt
           echo "VIKMA_UPLOAD_KEY_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt
+          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt file eke thiyena agaya" >> SECRETS_GUIDE.txt
+          echo "GUIDE_DONE"
+
           zip VIKMA-NEW-KEY-BACKUP.zip vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt
+          echo "ZIP_DONE"
+          ls -lh
+
       - name: Upload Backup ZIP
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: VIKMA-NEW-KEY-BACKUP
           path: VIKMA-NEW-KEY-BACKUP.zip
+          if-no-files-found: warn
