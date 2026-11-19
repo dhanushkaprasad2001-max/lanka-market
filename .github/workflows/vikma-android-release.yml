@@ -64,7 +64,7 @@ jobs:
               if "buildTypes {" not in s:
                   raise SystemExit("Could not find buildTypes block in generated Android Gradle file")
               s = s.replace("    buildTypes {", signing + "\n    buildTypes {", 1)
-          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
+          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
           if not re.search(pattern, s):
               raise SystemExit("Could not find release build type in generated Android Gradle file")
           s = re.sub(pattern, r"\\1\n            signingConfig signingConfigs.release", s, count=1)
