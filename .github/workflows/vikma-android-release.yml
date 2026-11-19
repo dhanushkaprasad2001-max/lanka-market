@@ -24,7 +24,7 @@ jobs:
       - name: Add Android platform and sync
         working-directory: apps/vikma-mobile
         run: npx cap add android && npx cap sync android
-      - name: Prepare persistent upload signing key
+      - name: Prepare private upload signing key
         working-directory: apps/vikma-mobile
         env:
           KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
@@ -32,32 +32,22 @@ jobs:
           KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
-            echo "$KEYSTORE_B64" | base64 --decode > android/app/vikma-upload-key.jks
-          else
-            STORE_PASSWORD="$(openssl rand -hex 24)"
-            KEY_PASSWORD="$STORE_PASSWORD"
-            KEY_ALIAS="vikma-upload"
-            keytool -genkeypair -v -keystore android/app/vikma-upload-key.jks -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=VIKMA, OU=Mobile, O=VIKMA, L=Colombo, ST=Western, C=LK"
+          set -euo pipefail
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Missing signing secrets. Add VIKMA_UPLOAD_KEYSTORE_BASE64, VIKMA_UPLOAD_STORE_PASSWORD, VIKMA_UPLOAD_KEY_ALIAS, and VIKMA_UPLOAD_KEY_PASSWORD in GitHub repository Actions secrets."
+            exit 1
           fi
+          mkdir -p android/app
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > android/app/vikma-upload-key.jks
+          test -s android/app/vikma-upload-key.jks
+          keytool -list -keystore android/app/vikma-upload-key.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
           {
             echo "STORE_PASSWORD=$STORE_PASSWORD"
             echo "KEY_ALIAS=$KEY_ALIAS"
             echo "KEY_PASSWORD=$KEY_PASSWORD"
           } >> "$GITHUB_ENV"
-          {
-            echo "KEYSTORE_FILE=vikma-upload-key.jks"
-            echo "KEY_ALIAS=$KEY_ALIAS"
-            echo "STORE_PASSWORD=$STORE_PASSWORD"
-            echo "KEY_PASSWORD=$KEY_PASSWORD"
-            echo "IMPORTANT: Keep this keystore and these passwords private and backed up. They are required to sign future VIKMA updates."
-          } > android/signing-details.txt
       - name: Configure Play Store upload signing
         working-directory: apps/vikma-mobile
-        env:
-          STORE_PASSWORD: ${{ env.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ env.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -77,11 +67,12 @@ jobs:
           if "signingConfigs {" not in s:
               if "buildTypes {" not in s:
                   raise SystemExit("Could not find buildTypes block in generated Android Gradle file")
-              s = s.replace("    buildTypes {", signing + "\n    buildTypes {", 1)
-          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
+              s = s.replace("    buildTypes {", signing + "\\n    buildTypes {", 1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
           if not re.search(pattern, s):
               raise SystemExit("Could not find release build type in generated Android Gradle file")
-          s = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", s, count=1)
+          if "signingConfig signingConfigs.release" not in s:
+              s = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", s, count=1)
           p.write_text(s)
           PY
       - name: Build signed Play Store bundle and APK
@@ -99,6 +90,4 @@ jobs:
           path: |
             apps/vikma-mobile/android/app/build/outputs/bundle/release/app-release.aab
             apps/vikma-mobile/android/app/build/outputs/apk/release/app-release.apk
-            apps/vikma-mobile/android/app/vikma-upload-key.jks
-            apps/vikma-mobile/android/signing-details.txt
-          retention-days: 90
+          retention-days: 30
