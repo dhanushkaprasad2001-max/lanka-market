@@ -27,10 +27,10 @@ jobs:
       - name: Prepare private upload signing key
         working-directory: apps/vikma-mobile
         env:
-          KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+          KEYSTORE_B64: \${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: \${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: \${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: \${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           if [ -z "$KEYSTORE_B64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
@@ -67,20 +67,20 @@ jobs:
           if "signingConfigs {" not in s:
               if "buildTypes {" not in s:
                   raise SystemExit("Could not find buildTypes block in generated Android Gradle file")
-              s = s.replace("    buildTypes {", signing + "\\n    buildTypes {", 1)
-          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
+              s = s.replace("    buildTypes {", signing + "\n    buildTypes {", 1)
+          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
           if not re.search(pattern, s):
               raise SystemExit("Could not find release build type in generated Android Gradle file")
           if "signingConfig signingConfigs.release" not in s:
-              s = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", s, count=1)
+              s = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", s, count=1)
           p.write_text(s)
           PY
       - name: Build signed Play Store bundle and APK
         working-directory: apps/vikma-mobile/android
         env:
-          STORE_PASSWORD: ${{ env.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ env.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+          STORE_PASSWORD: \${{ env.STORE_PASSWORD }}
+          KEY_ALIAS: \${{ env.KEY_ALIAS }}
+          KEY_PASSWORD: \${{ env.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease assembleRelease
