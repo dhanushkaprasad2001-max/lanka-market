@@ -9,8 +9,8 @@ jobs:
   build-ios-simulator:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Install dependencies
@@ -26,7 +26,7 @@ jobs:
         run: |
           cd apps/vikma-mobile/ios/App/build/Build/Products/Debug-iphonesimulator
           /usr/bin/zip -r "$GITHUB_WORKSPACE/VIKMA-iOS-Simulator.zip" App.app
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: vikma-ios-simulator-app
           path: VIKMA-iOS-Simulator.zip
