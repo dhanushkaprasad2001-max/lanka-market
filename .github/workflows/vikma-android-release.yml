@@ -1,6 +1,9 @@
 name: Build VIKMA Android Play Store Release
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/vikma-android-release.yml'
 jobs:
   release:
     runs-on: ubuntu-latest
