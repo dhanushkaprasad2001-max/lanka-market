@@ -15,6 +15,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
+      - name: Install dependencies
+        working-directory: apps/vikma-mobile
+        run: npm install
+      - name: Add Android platform and sync
+        working-directory: apps/vikma-mobile
+        run: npx cap add android && npx cap sync android
       - name: Prepare persistent upload signing key
         working-directory: apps/vikma-mobile
         env:
@@ -30,32 +36,25 @@ jobs:
             KEY_PASSWORD="$STORE_PASSWORD"
             KEY_ALIAS="vikma-upload"
             keytool -genkeypair -v -keystore android/app/vikma-upload-key.jks -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=VIKMA, OU=Mobile, O=VIKMA, L=Colombo, ST=Western, C=LK"
-            {
-              echo "KEYSTORE_FILE=vikma-upload-key.jks"
-              echo "KEY_ALIAS=$KEY_ALIAS"
-              echo "STORE_PASSWORD=$STORE_PASSWORD"
-              echo "KEY_PASSWORD=$KEY_PASSWORD"
-              echo "IMPORTANT: Keep this keystore and these passwords private and backed up. They are required to sign future VIKMA updates."
-            } > android/signing-details.txt
-            {
-              echo "STORE_PASSWORD=$STORE_PASSWORD"
-              echo "KEY_ALIAS=$KEY_ALIAS"
-              echo "KEY_PASSWORD=$KEY_PASSWORD"
-              echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/apps/vikma-mobile/android/app/vikma-upload-key.jks"
-            } >> "$GITHUB_ENV"
           fi
-      - name: Install dependencies
-        working-directory: apps/vikma-mobile
-        run: npm install
-      - name: Add Android platform and sync
-        working-directory: apps/vikma-mobile
-        run: npx cap add android && npx cap sync android
+          {
+            echo "STORE_PASSWORD=$STORE_PASSWORD"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          {
+            echo "KEYSTORE_FILE=vikma-upload-key.jks"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "STORE_PASSWORD=$STORE_PASSWORD"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+            echo "IMPORTANT: Keep this keystore and these passwords private and backed up. They are required to sign future VIKMA updates."
+          } > android/signing-details.txt
       - name: Configure Play Store upload signing
         working-directory: apps/vikma-mobile
         env:
-          STORE_PASSWORD: ${{ env.STORE_PASSWORD || secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ env.KEY_ALIAS || secrets.VIKMA_UPLOAD_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ env.KEY_PASSWORD || secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ env.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ env.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -75,19 +74,19 @@ jobs:
           if "signingConfigs {" not in s:
               if "buildTypes {" not in s:
                   raise SystemExit("Could not find buildTypes block in generated Android Gradle file")
-              s = s.replace("    buildTypes {", signing + "\n    buildTypes {", 1)
-          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
+              s = s.replace("    buildTypes {", signing + "\\n    buildTypes {", 1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
           if not re.search(pattern, s):
               raise SystemExit("Could not find release build type in generated Android Gradle file")
-          s = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", s, count=1)
+          s = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", s, count=1)
           p.write_text(s)
           PY
       - name: Build signed Play Store bundle and APK
         working-directory: apps/vikma-mobile/android
         env:
-          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ env.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ env.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease assembleRelease
