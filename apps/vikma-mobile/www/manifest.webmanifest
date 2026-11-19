@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "VIKMA - Sri Lanka Marketplace",
+  "short_name": "VIKMA",
+  "description": "Buy and sell across Sri Lanka.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#08765b",
+  "icons": [
+    {
+      "src": "/icons/vikma.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
