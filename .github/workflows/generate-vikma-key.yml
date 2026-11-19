@@ -10,35 +10,57 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate Keystore
+      - name: Generate Keystore with Python
         shell: bash
         run: |
           set +e
           set +o pipefail
           echo START
+          pip install cryptography -q || echo PIP_WARN
+          echo PIP_DONE
+          python3 -c "
+          import os, base64
+          from cryptography.hazmat.primitives.asymmetric import rsa
+          from cryptography.hazmat.primitives import hashes, serialization
+          from cryptography.hazmat.primitives.serialization import pkcs12
+          from cryptography import x509
+          from cryptography.x509.oid import NameOID
+          import datetime
 
-          STORE_PASS=$(openssl rand -hex 12)
-          echo PASS_OK
+          # 1. Password
+          pw = os.urandom(12).hex()
+          open('mypass.txt','w').write(pw)
+          print('PASS_OK')
 
-          keytool -genkeypair -keystore vikma-upload.keystore -alias vikma-upload -keyalg RSA -keysize 2048 -validity 10000 -storepass "$STORE_PASS" -keypass "$STORE_PASS" -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK" -storetype PKCS12 || echo KEYTOOL_WARN
-          echo KEYTOOL_DONE
-          ls -lh vikma-upload.keystore || echo NO_KEYSTORE
+          # 2. RSA 2048 Key
+          key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+          print('KEY_OK')
 
-          openssl base64 -in vikma-upload.keystore -out vikma-upload.keystore.base64.txt || echo BASE64_WARN
-          echo BASE64_DONE
-          ls -lh vikma-upload.keystore.base64.txt || echo NO_BASE64
-          wc -c vikma-upload.keystore.base64.txt || echo WC_WARN
+          # 3. Self-signed Cert
+          subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'VIKMA'), x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'VIKMA'), x509.NameAttribute(NameOID.COUNTRY_NAME, 'LK')])
+          cert = x509.CertificateBuilder().subject_name(subject).issuer_name(subject).public_key(key.public_key()).serial_number(x509.random_serial_number()).not_valid_before(datetime.datetime.now(datetime.timezone.utc)).not_valid_after(datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=10000)).add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True).sign(key, hashes.SHA256())
+          print('CERT_OK')
 
-          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" > SECRETS_GUIDE.txt || echo GUIDE_WARN
-          echo "VIKMA_UPLOAD_KEY_ALIAS = vikma-upload" >> SECRETS_GUIDE.txt || echo GUIDE_WARN2
-          echo "VIKMA_UPLOAD_KEY_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt || echo GUIDE_WARN3
-          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt file eke thiyena agaya" >> SECRETS_GUIDE.txt || echo GUIDE_WARN4
-          cat SECRETS_GUIDE.txt || echo CAT_WARN
+          # 4. PKCS12 Keystore - alias = vikma-upload, storepass = keypass
+          data = pkcs12.serialize_key_and_certificates(b'vikma-upload', key, cert, None, serialization.BestAvailableEncryption(pw.encode()))
+          open('vikma-upload.keystore','wb').write(data)
+          print('KEYSTORE_OK')
 
+          # 5. Base64
+          b64 = base64.b64encode(data).decode()
+          open('vikma-upload.keystore.base64.txt','w').write(b64)
+          print('BASE64_OK len=' + str(len(b64)))
+
+          # 6. Guide
+          open('SECRETS_GUIDE.txt','w').write('VIKMA_UPLOAD_STORE_PASSWORD = ' + pw + '\nVIKMA_UPLOAD_KEY_ALIAS = vikma-upload\nVIKMA_UPLOAD_KEY_PASSWORD = ' + pw + '\nVIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt file eke thiyena agaya\n')
+          print('GUIDE_OK')
+          "
+          echo PYTHON_DONE
+          ls -lh
+          wc -c vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt || echo WC_WARN
           zip VIKMA-NEW-KEY-BACKUP.zip vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt || echo ZIP_WARN
           echo ZIP_DONE
-          ls -lh || echo LS_WARN
-          echo ALL_DONE
+          ls -lh
 
       - name: Upload Backup ZIP
         if: always()
