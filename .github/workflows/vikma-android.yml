@@ -26,7 +26,7 @@ jobs:
       - name: Build debug APK
         working-directory: apps/vikma-mobile/android
         run: chmod +x gradlew && ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: vikma-android-debug-apk
           path: apps/vikma-mobile/android/app/build/outputs/apk/debug/app-debug.apk
