@@ -1,10 +1,6 @@
 name: Build VIKMA Android Play Store Release
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'apps/vikma-mobile/**'
-      - '.github/workflows/vikma-android-release.yml'
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -19,16 +15,34 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Check signing secrets
+      - name: Prepare persistent upload signing key
+        working-directory: apps/vikma-mobile
         env:
           KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_B64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
-            echo "::error::Android upload signing secrets are missing. Add the four VIKMA_UPLOAD_* repository secrets before running this workflow."
-            exit 1
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo "$KEYSTORE_B64" | base64 --decode > android/app/vikma-upload-key.jks
+          else
+            STORE_PASSWORD="$(openssl rand -hex 24)"
+            KEY_PASSWORD="$STORE_PASSWORD"
+            KEY_ALIAS="vikma-upload"
+            keytool -genkeypair -v -keystore android/app/vikma-upload-key.jks -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=VIKMA, OU=Mobile, O=VIKMA, L=Colombo, ST=Western, C=LK"
+            {
+              echo "KEYSTORE_FILE=vikma-upload-key.jks"
+              echo "KEY_ALIAS=$KEY_ALIAS"
+              echo "STORE_PASSWORD=$STORE_PASSWORD"
+              echo "KEY_PASSWORD=$KEY_PASSWORD"
+              echo "IMPORTANT: Keep this keystore and these passwords private and backed up. They are required to sign future VIKMA updates."
+            } > android/signing-details.txt
+            {
+              echo "STORE_PASSWORD=$STORE_PASSWORD"
+              echo "KEY_ALIAS=$KEY_ALIAS"
+              echo "KEY_PASSWORD=$KEY_PASSWORD"
+              echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/apps/vikma-mobile/android/app/vikma-upload-key.jks"
+            } >> "$GITHUB_ENV"
           fi
       - name: Install dependencies
         working-directory: apps/vikma-mobile
@@ -39,12 +53,10 @@ jobs:
       - name: Configure Play Store upload signing
         working-directory: apps/vikma-mobile
         env:
-          KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ env.STORE_PASSWORD || secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ env.KEY_ALIAS || secrets.VIKMA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD || secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_B64" | base64 --decode > android/app/vikma-upload-key.jks
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -85,4 +97,6 @@ jobs:
           path: |
             apps/vikma-mobile/android/app/build/outputs/bundle/release/app-release.aab
             apps/vikma-mobile/android/app/build/outputs/apk/release/app-release.apk
-          retention-days: 30
+            apps/vikma-mobile/android/app/vikma-upload-key.jks
+            apps/vikma-mobile/android/signing-details.txt
+          retention-days: 90
