@@ -1,0 +1,33 @@
+name: Build VIKMA iOS App
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'apps/vikma-mobile/**'
+      - '.github/workflows/vikma-ios.yml'
+jobs:
+  build-ios-simulator:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        working-directory: apps/vikma-mobile
+        run: npm install
+      - name: Add iOS platform and sync app
+        working-directory: apps/vikma-mobile
+        run: npx cap add ios && npx cap sync ios
+      - name: Build iOS Simulator app
+        working-directory: apps/vikma-mobile/ios/App
+        run: xcodebuild -workspace App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+      - name: Package simulator app
+        run: |
+          cd apps/vikma-mobile/ios/App/build/Build/Products/Debug-iphonesimulator
+          /usr/bin/zip -r "$GITHUB_WORKSPACE/VIKMA-iOS-Simulator.zip" App.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vikma-ios-simulator-app
+          path: VIKMA-iOS-Simulator.zip
+          retention-days: 30
