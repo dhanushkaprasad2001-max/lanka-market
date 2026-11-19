@@ -1,0 +1,88 @@
+name: Build VIKMA Android Play Store Release
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'apps/vikma-mobile/**'
+      - '.github/workflows/vikma-android-release.yml'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: vikma-mobile-app
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Check signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Android upload signing secrets are missing. Add the four VIKMA_UPLOAD_* repository secrets before running this workflow."
+            exit 1
+          fi
+      - name: Install dependencies
+        working-directory: apps/vikma-mobile
+        run: npm install
+      - name: Add Android platform and sync
+        working-directory: apps/vikma-mobile
+        run: npx cap add android && npx cap sync android
+      - name: Configure Play Store upload signing
+        working-directory: apps/vikma-mobile
+        env:
+          KEYSTORE_B64: ${{ secrets.VIKMA_UPLOAD_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > android/app/vikma-upload-key.jks
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+          signing = """
+              signingConfigs {
+                  release {
+                      storeFile file("vikma-upload-key.jks")
+                      storePassword System.getenv("STORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+          """
+          if "signingConfigs {" not in s:
+              if "buildTypes {" not in s:
+                  raise SystemExit("Could not find buildTypes block in generated Android Gradle file")
+              s = s.replace("    buildTypes {", signing + "\n    buildTypes {", 1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
+          if not re.search(pattern, s):
+              raise SystemExit("Could not find release build type in generated Android Gradle file")
+          s = re.sub(pattern, r"\\1\n            signingConfig signingConfigs.release", s, count=1)
+          p.write_text(s)
+          PY
+      - name: Build signed Play Store bundle and APK
+        working-directory: apps/vikma-mobile/android
+        env:
+          STORE_PASSWORD: ${{ secrets.VIKMA_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.VIKMA_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.VIKMA_UPLOAD_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease assembleRelease
+      - uses: actions/upload-artifact@v6
+        with:
+          name: vikma-play-store-release
+          path: |
+            apps/vikma-mobile/android/app/build/outputs/bundle/release/app-release.aab
+            apps/vikma-mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
