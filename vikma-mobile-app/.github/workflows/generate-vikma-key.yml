@@ -1,0 +1,54 @@
+name: Generate VIKMA Upload Key
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate New Keystore
+        run: |
+          # 1. අලුත් Random Password එකක් හදනවා
+          STORE_PASS=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9!@#%_-')
+          echo "STORE_PASS=$STORE_PASS" >> $GITHUB_ENV
+          echo "Generated password will be saved in artifact"
+
+          # 2. RSA 2048, Alias = vikma-upload, Store Pass = Key Pass
+          keytool -genkeypair \
+            -v \
+            -keystore vikma-upload.keystore \
+            -alias vikma-upload \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "$STORE_PASS" \
+            -keypass "$STORE_PASS" \
+            -d "CN=VIKMA, OU=VIKMA, O=VIKMA, L=Colombo, ST=Western, C=LK"
+
+          # 3. Keystore එක හරිද කියලා පරීක්ෂා කරනවා
+          echo "--- CHECK 1: Keystore එක විවෘත වෙනවද ---"
+          keytool -list -v -keystore vikma-upload.keystore -storepass "$STORE_PASS"
+
+          echo "--- CHECK 2: Alias එක හරිද ---"
+          keytool -list -keystore vikma-upload.keystore -storepass "$STORE_PASS" | grep "vikma-upload"
+
+          # 4. Base64 හදනවා
+          base64 -w 0 vikma-upload.keystore > vikma-upload.keystore.base64.txt
+
+          # 5. උපදෙස් ගොනුව හදනවා
+          echo "VIKMA_UPLOAD_KEYSTORE_BASE64 = vikma-upload.keystore.base64.txt ඇතුලේ තියෙන අගය" > SECRETS_GUIDE.txt
+          echo "VIKMA_UPLOAD_STORE_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt
+          echo "VIKMA_UPLOAD_KEY_ALIAS = vikma-upload" >> SECRETS_GUIDE.txt
+          echo "VIKMA_UPLOAD_KEY_PASSWORD = $STORE_PASS" >> SECRETS_GUIDE.txt
+          echo "" >> SECRETS_GUIDE.txt
+          echo "STORE PASS සහ KEY PASS දෙකම එකමයි." >> SECRETS_GUIDE.txt
+
+          # 6. ZIP Backup එක හදනවා
+          zip VIKMA-NEW-KEY-BACKUP.zip vikma-upload.keystore vikma-upload.keystore.base64.txt SECRETS_GUIDE.txt
+
+      - name: Upload Backup ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: VIKMA-NEW-KEY-BACKUP
+          path: VIKMA-NEW-KEY-BACKUP.zip
